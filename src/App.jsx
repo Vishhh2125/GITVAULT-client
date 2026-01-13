@@ -8,7 +8,7 @@ import RepositoryPage from './Components/Repository/RepositoryPage.jsx'
 import PatTokenPage from './Components/Token/patTokenPage.jsx'
 import Settings from './Components/Settings/settings.jsx'
 import ProtectedRoute from './Components/Authentication/ProtectedRoute.jsx'
-
+import RepositoryDetailPage from './Components/Repository/RepositoryDetailPage.jsx'
 function App() {
   return (
     <Routes>
@@ -23,7 +23,7 @@ function App() {
         <Route path="/repositories" element={<ProtectedRoute><RepositoryPage /></ProtectedRoute>} />
         <Route path="/pat-tokens" element={<ProtectedRoute><PatTokenPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-  
+        <Route path="/repositories/:id" element={<ProtectedRoute><RepositoryDetailPage /></ProtectedRoute>} />
       </Route>
     </Routes>
   )

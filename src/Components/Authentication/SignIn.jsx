@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { loginUser, clearError } from '../../features/userSlice.js';
+import { loginUser, clearError, resetLoginStatus } from '../../features/userSlice.js';
 import { useNavigate } from 'react-router-dom';
+import { use } from 'react';
 
 export function Login() {
   const dispatch = useDispatch();
@@ -67,13 +68,20 @@ export function Login() {
   };
 
   useEffect(() => {
-    if (loginStatus === "succeeded") {
+    if (loginStatus === "succeeded" && localStorage.getItem("token")) {
       setFormData({ email: "", password: "" });
       setErrors({});
       navigate("/dashboard", { replace: true });
 
     }
+   
   }, [loginStatus]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetLoginStatus());
+    };  
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0e1018] to-[#0b0d14] text-white flex items-center justify-center relative">

@@ -47,6 +47,10 @@ const createPat=createAsyncThunk(
 )
 
 
+
+
+
+
      
 
 
@@ -66,17 +70,28 @@ const patSlice = createSlice({
     //create 
     creating:false,
     createError:null,
+    // Store newly created token temporarily (shown only once)
+    newlyCreatedToken: null,
 
   },
   reducers: {
-    resetPatStatus:(state )=>{
-
-        state.status="idle"
+    resetPats:(state )=>{
+        state.tokens=[];
+        state.status="idle";
+        state.error=null;
+        state.deletingId = null;
+        state.actionError = null;
+        state.creating = false;
+        state.createError = null;
+        state.newlyCreatedToken = null;
     },
     clearErrors(state) {
-      state.error = null
-      state.actionError = null
-      state.createError = null
+      state.error = null;
+      state.actionError = null;
+      state.createError = null;
+    },
+    clearNewlyCreatedToken(state) {
+      state.newlyCreatedToken = null;
     }
   },
   extraReducers: (builder) => {
@@ -86,10 +101,10 @@ const patSlice = createSlice({
       .addCase(getPatTokens.pending, (state) => {
         state.status = "loading";
         state.error = null;
-        state.actionError = null,
-        state.createError = null,
-        state.creating=false,
-        state.deletingId= null
+        state.actionError = null;
+        state.createError = null;
+        state.creating=false;
+        state.deletingId= null;
 
       })
       .addCase(getPatTokens.fulfilled, (state, action) => {
@@ -136,23 +151,30 @@ const patSlice = createSlice({
         state.error = null;
         state.deletingId= null;
         state.actionError = null;
+        state.newlyCreatedToken = null;
     })
     .addCase(createPat.fulfilled,(state,action)=>{
         state.creating=false;
-        state.tokens.push(action.payload);
+        state.tokens.push(action.payload.pat);
         state.createError=null;
+        // Store the raw token temporarily (shown only once in UI)
+        state.newlyCreatedToken = {
+          token: action.payload.token,
+          patId: action.payload.pat._id
+        };
     })
     .addCase(createPat.rejected,(state,action)=>{
         state.creating=false;
         state.createError={
             id:action.meta.arg,
           message:  action.payload
-        }
+        };
+        state.newlyCreatedToken = null;
     });
     
   }
 });
 
 export default patSlice.reducer;
-export const {resetPatStatus,clearErrors}=patSlice.actions
+export const {resetPats,clearErrors,clearNewlyCreatedToken}=patSlice.actions
 export { getPatTokens, deletePAT, createPat };

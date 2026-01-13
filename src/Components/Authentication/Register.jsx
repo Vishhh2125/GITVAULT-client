@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { registerUser, clearError ,resetRegisterStatus } from '../../features/userSlice.js';
+import { useNavigate } from 'react-router-dom';
 
 export function Register() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const registerStatus = useSelector((state) => state.user.registerStatus);
+  const userError = useSelector((state) => state.user.error);
+
+  const isLoading = registerStatus === "loading";
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -10,21 +20,73 @@ export function Register() {
   });
   const [errors, setErrors] = useState({});
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+
+    const newErrors = {};
+
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (formData.username.length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    dispatch(registerUser(formData));
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: '' });
+    const { name, value } = e.target;
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+
+    if (userError) {
+      dispatch(clearError());
     }
   };
+
+  useEffect(() => {
+    if (registerStatus === "succeeded") {
+      setFormData({ username: "", email: "", password: "" });
+      setErrors({});
+      navigate("/login", { replace: true });
+    }
+
+   
+  }, [registerStatus, navigate]);
+
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetRegisterStatus());
+    };
+  }, [dispatch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0e1018] to-[#0b0d14] text-white flex items-center justify-center relative">
@@ -43,6 +105,7 @@ export function Register() {
           </div>
           <h1 className="text-2xl font-semibold">Create your account</h1>
           <p className="text-slate-400 text-sm mt-2">Start hosting your code with GitVault</p>
+          {userError && <p className="text-red-400 text-sm mt-2">{userError}</p>}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">

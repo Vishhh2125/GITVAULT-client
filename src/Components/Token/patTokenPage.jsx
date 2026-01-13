@@ -1,10 +1,9 @@
 import { useState ,useEffect} from 'react';
 import { useDispatch,useSelector } from 'react-redux';
-import { getPatTokens, deletePAT ,resetPatStatus ,clearErrors ,createPat} from '../../features/patSlice.js';
+import { getPatTokens, deletePAT ,resetPats ,clearErrors ,createPat, clearNewlyCreatedToken} from '../../features/patSlice.js';
 import toast from 'react-hot-toast';
 import LoadingState from '../Layout/Loading.jsx';
 import ErrorState from '../Layout/Error.jsx';
-import { ApiError } from '../../../../backend/utils/ApiError.js';
 function PatTokenPage() {
 
   const dispatch = useDispatch();
@@ -16,10 +15,15 @@ function PatTokenPage() {
     status: patStatus,
     error: patError,
     deletingId,
-    actionError
+    actionError,
+    creating,
+    createError,
+    newlyCreatedToken
   } = useSelector((state) => state.pat);
      
-  const [visible, setVisible] = useState({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newTokenLabel, setNewTokenLabel] = useState('');
+  const [showTokenModal, setShowTokenModal] = useState(false);
 
   // 1]]
   useEffect(()=>{
@@ -28,7 +32,11 @@ function PatTokenPage() {
       
       dispatch(getPatTokens());
     }
-  }, [ patStatus, dispatch]);
+
+    return ()=>{
+      dispatch(resetPats());
+    }
+  }, [  dispatch]);
 
   // 2]Show toast for action errors
   useEffect(() => {
@@ -37,27 +45,56 @@ function PatTokenPage() {
     }
   }, [actionError]);
 
-  const copyToken = async (tokenValue) => {
-    if (!tokenValue) {
-      toast.error('Token value is not available. Tokens are only visible when first created.');
+  // 3] Show toast for create errors
+  useEffect(() => {
+    if (createError) {
+      toast.error(createError || 'Failed to create token');
+    }
+  }, [createError]);
+
+  const handleCreateToken = async () => {
+    if (!newTokenLabel.trim()) {
+      toast.error('Please enter a token label');
       return;
     }
+    
     try {
-      await navigator.clipboard.writeText(tokenValue);
-         toast.success('Token copied to clipboard!');
-    } catch (err) {
-      console.error('Failed to copy token:', err);
-      toast.error('Failed to copy token');
+      await dispatch(createPat(newTokenLabel)).unwrap();
+      setNewTokenLabel('');
+      setShowCreateModal(false);
+      // Show the token modal after creation
+      setShowTokenModal(true);
+    } catch (error) {
+      // Error already handled by useEffect
     }
   };
+
+  const handleCloseTokenModal = () => {
+    setShowTokenModal(false);
+    dispatch(clearNewlyCreatedToken());
+  };
+
+  const handleCopyNewToken = async () => {
+    if (newlyCreatedToken?.token) {
+      try {
+        await navigator.clipboard.writeText(newlyCreatedToken.token);
+        toast.success('Token copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy token:', err);
+        toast.error('Failed to copy token');
+      }
+    }
+  };
+
+  // Removed copyToken - tokens can't be copied after creation
 
   const deleteToken = (id) => {
     dispatch(deletePAT(id));
   };
 
-  const mask = (v) => {
-    if (!v || v.length < 12) return '••••••••••••••••••••••••••••••••';
-    return `${v.slice(0, 8)}••••••••••••••${v.slice(-4)}`;
+  const mask = () => {
+    // Always return masked token (raw token is never stored/shown after creation)
+    return '••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••';
   };
 
   // Check if token is expired
@@ -124,13 +161,146 @@ function PatTokenPage() {
           </h1>
           <p className="text-slate-500 text-xs font-medium">Secure keys for API and CLI access.</p>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-md shadow-indigo-500/10 active:scale-95 flex items-center gap-2">
+        <button 
+          onClick={() => setShowCreateModal(true)}
+          className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-md shadow-indigo-500/10 active:scale-95 flex items-center gap-2"
+        >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           Generate Token
         </button>
       </div>
+
+      {/* Show Token Modal - Shows raw token only once after creation */}
+      {showTokenModal && newlyCreatedToken && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1d2e] border-2 border-yellow-500/50 rounded-xl max-w-2xl w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/20 rounded-lg">
+                  <svg className="w-6 h-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Token Created Successfully!</h2>
+                  <p className="text-yellow-400 text-sm mt-1">⚠️ Copy this token now - you won't be able to see it again!</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseTokenModal}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mb-4 p-4 bg-[#0b0d14] border border-yellow-500/30 rounded-lg">
+              <label className="block text-sm text-slate-300 mb-2 font-semibold">Your Personal Access Token</label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 font-mono text-sm text-yellow-300 break-all select-all">
+                  {newlyCreatedToken.token}
+                </code>
+                <button
+                  onClick={handleCopyNewToken}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black rounded-lg font-semibold transition-all flex items-center gap-2 whitespace-nowrap"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
+              <p className="text-blue-300 text-sm">
+                <strong>Important:</strong> This token will not be shown again. Make sure to copy it and store it securely. 
+                You can use this token for Git CLI authentication and API access.
+              </p>
+            </div>
+
+            <button
+              onClick={handleCloseTokenModal}
+              className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all"
+            >
+              I've Copied the Token
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Create Token Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1d2e] border border-indigo-500/30 rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Create New Token</h2>
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewTokenLabel('');
+                }}
+                className="text-slate-400 hover:text-white transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="text-slate-400 text-sm mb-4">
+              Give your token a descriptive name to help you identify it later.
+            </p>
+
+            <div className="mb-6">
+              <label className="block text-sm text-slate-300 mb-2">Token Label</label>
+              <input
+                type="text"
+                value={newTokenLabel}
+                onChange={(e) => setNewTokenLabel(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleCreateToken()}
+                placeholder="e.g., Production API Key"
+                className="w-full px-4 py-2 rounded-lg bg-[#0b0d14] border border-indigo-400/20 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/20 text-white placeholder-slate-500 transition-all"
+                disabled={creating}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCreateModal(false);
+                  setNewTokenLabel('');
+                }}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-600 hover:bg-slate-800/50 text-slate-300 text-sm font-medium transition-all"
+                disabled={creating}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateToken}
+                disabled={creating || !newTokenLabel.trim()}
+                className="flex-1 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {creating ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating...
+                  </>
+                ) : (
+                  'Create Token'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tokens List */}
       <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
@@ -164,27 +334,8 @@ function PatTokenPage() {
                     </p>
                   </div>
 
-                  {/* Action Icons (SVG Native) */}
+                  {/* Action Icons - Only delete button (token can't be shown/copied after creation) */}
                   <div className="flex items-center gap-1">
-                    {token.tokenHash && (
-                      <button 
-                        onClick={() => setVisible((v) => ({ ...v, [token._id]: !v[token._id] }))} 
-                        className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                        title={visible[token._id] ? "Hide token" : "Show token"}
-                      >
-                        {visible[token._id] ? 
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg> : 
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        }
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => copyToken(token.tokenHash)} 
-                      className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10 rounded-lg transition-colors"
-                      title="Copy token"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 00-2 2z" /></svg>
-                    </button>
                     <button 
                       onClick={() => deleteToken(token._id)} 
                       disabled={deletingId === token._id}
@@ -207,16 +358,10 @@ function PatTokenPage() {
                   </div>
                 </div>
 
-                {/* Token Box */}
+                {/* Token Box - Always masked (raw token never shown after creation) */}
                 <div className="bg-[#161927] border border-white/5 rounded-lg p-3 font-mono text-sm text-indigo-300/80 flex justify-between items-center group-hover:border-indigo-500/20 transition-all">
                   <span className="truncate pr-4">
-                    {token.tokenHash ? (
-                      visible[token._id] ? token.tokenHash : mask(token.tokenHash)
-                    ) : (
-                      <span className="text-slate-500 italic font-sans text-xs">
-                        Token value hidden for security
-                      </span>
-                    )}
+                    {mask()}
                   </span>
                   <div className="flex items-center gap-1 text-[10px] text-slate-600 font-sans uppercase tracking-widest whitespace-nowrap">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

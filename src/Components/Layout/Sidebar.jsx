@@ -8,10 +8,10 @@ export default function Sidebar() {
   const getActiveItem = () => {
     const path = location.pathname;
     if (path === '/dashboard') return 'dashboard';
-    if (path === '/repositories') return 'repositories';
+    if (path.startsWith('/repositories')) return 'repositories';
     if (path === '/pat-tokens') return 'pat-tokens';
     if (path === '/settings') return 'settings';
-    return 'dashboard';
+    return 'login'; // This is wrong!
   };
 
   const menuItems = [

@@ -92,7 +92,7 @@
             </button>
           )}
           
-          <a
+          {/* <a
             href="/"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-slate-700 hover:border-slate-600 bg-transparent hover:bg-slate-800/50 text-slate-300 text-sm font-medium transition-all duration-150"
           >
@@ -101,7 +101,8 @@
             </svg>
             Go to homepage
           </a>
-        </div>
+            */}
+        </div> 
 
         {/* Help Text */}
         <p className="mt-8 text-sm text-slate-500">

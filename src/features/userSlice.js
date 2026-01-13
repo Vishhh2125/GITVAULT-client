@@ -50,18 +50,30 @@ const logoutUser=createAsyncThunk(
     "user/logoutuser",
     async(_ ,{rejectWithValue})=>{
         try {
-
             const response = await api.post("/users/logout");
             return response.data.data;      
         } catch (error) {
-
             console.log("Error logging out user:", error);
-              return rejectWithValue(
-            error.response?.data?.message || error.message  || "Something went wrong"
-              )
+            return rejectWithValue(
+                error.response?.data?.message || error.message  || "Something went wrong"
+            )
         }
     }
-)
+);
+
+const changePassword = createAsyncThunk(
+    "user/changePassword",
+    async({oldPassword, newPassword}, {rejectWithValue}) => {
+        try {
+            const response = await api.put("/users/change-password", {oldPassword, newPassword});
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(
+                error.response?.data?.message || error.message || "Something went wrong"
+            );
+        }
+    }
+);
 
 
 
@@ -81,6 +93,18 @@ const userSlice=createSlice({
     reducers:{
         clearError: (state) => {
           state.error = null;
+        },
+        resetLoginStatus:(state)=>{
+            state.loginStatus="idle";
+            state.error = null;
+        },
+        resetRegisterStatus:(state)=>{
+            state.registerStatus="idle";
+            state.error = null;
+        }
+        ,resetLogoutStatus:(state)=>{
+            state.logoutStatus="idle";
+            state.error = null;
         }
 
     },
@@ -123,7 +147,9 @@ const userSlice=createSlice({
         state.error = null;
     })
     .addCase(logoutUser.fulfilled, (state) => {
+        state.user = null;
         state.logoutStatus = "succeeded";
+        state.loginStatus = "idle";
         state.user = null;
         localStorage.removeItem("user");
         localStorage.removeItem("token");
@@ -131,6 +157,16 @@ const userSlice=createSlice({
     })
     .addCase(logoutUser.rejected, (state, action) => {
         state.logoutStatus = "failed";
+        state.error = action.payload;
+    })
+    // CHANGE PASSWORD
+    .addCase(changePassword.pending, (state) => {
+        state.error = null;
+    })
+    .addCase(changePassword.fulfilled, (state) => {
+        state.error = null;
+    })
+    .addCase(changePassword.rejected, (state, action) => {
         state.error = action.payload;
     });
     }
@@ -140,5 +176,5 @@ const userSlice=createSlice({
 
 
 export default userSlice.reducer; //default export for the tsore config 
-export {registerUser, loginUser, logoutUser};//extra reducer async thuink export 
-export const { clearError } = userSlice.actions; //reducer expport 
+export {registerUser, loginUser, logoutUser, changePassword};//extra reducer async thuink export 
+export const { clearError, resetLoginStatus, resetRegisterStatus, resetLogoutStatus } = userSlice.actions; //reducer expport 
