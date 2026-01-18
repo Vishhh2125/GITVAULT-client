@@ -3,7 +3,7 @@ import axios from "axios";
 /* ----------------- Base Axios Instance ----------------- */
 
 const api = axios.create({
-  baseURL: "http://3.108.63.227:5000/api/v1",
+  baseURL: import.meta.env.PROD ? "/api" : "http://3.108.63.227:5000/api/v1",
   withCredentials: true   // ❗ Only refresh uses cookies
 });
 
@@ -25,8 +25,9 @@ api.interceptors.request.use(
 /* ----------------- Refresh Token Function ----------------- */
 
 const refreshAccessToken = async () => {
+  const baseURL = import.meta.env.PROD ? "/api" : "http://3.108.63.227:5000/api/v1";
   const response = await axios.post(
-    "http://localhost:5000/api/v1/users/refresh-accessToken",
+    `${baseURL}/users/refresh-accessToken`,
     {},
     { withCredentials: true }   // ✅ cookies only here
   );
