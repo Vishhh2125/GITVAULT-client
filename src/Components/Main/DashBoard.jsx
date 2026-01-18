@@ -250,50 +250,83 @@ export default function Dashboard() {
           <QuickActionCard icon={<BookOpen />} label="Documentation" description="View guides and help" link="/documentation" />
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-[#11141d] border border-white/5 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-white/5 bg-white/[0.02] flex justify-between">
-              <h2 className="text-xl font-semibold text-white">Recent Repositories</h2>
-              <SafeLink to="/repositories" className="text-indigo-400 hover:text-indigo-300 text-sm transition-colors">View all</SafeLink>
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-white">Recent Repositories</h2>
+              <SafeLink to="/repositories" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors flex items-center gap-1">
+                View all
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </SafeLink>
             </div>
 
-            <div className="divide-y divide-white/5">
+            <div className="space-y-3">
               {repoStatus === 'loading' ? (
-                <div className="p-6 text-center text-slate-400">Loading repositories...</div>
+                <div className="bg-[#11141d] border border-white/5 rounded-xl p-12 text-center">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-indigo-500/10 mb-3">
+                    <svg className="w-6 h-6 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-sm">Loading repositories...</p>
+                </div>
               ) : recentRepos.length === 0 ? (
-                <div className="p-6 text-center text-slate-400">
-                  No repositories yet. Create your first repository!
+                <div className="bg-[#11141d] border border-white/5 rounded-xl p-12 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 mb-4">
+                    <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-1">No repositories yet</p>
+                  <p className="text-slate-500 text-xs">Create your first repository to get started</p>
                 </div>
               ) : (
                 recentRepos.map(repo => {
                   const userRole = getUserRole(repo);
                   return (
-                    <SafeLink key={repo._id} to={`/repositories/${repo._id}`} className="block p-6 hover:bg-white/[0.02] transition-colors">
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">{repo.name}</h3>
-                            {userRole && (
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 capitalize whitespace-nowrap">
-                                {userRole}
-                              </span>
-                            )}
+                    <SafeLink key={repo._id} to={`/repositories/${repo._id}`} className="block group">
+                      <div className="bg-[#11141d] border border-white/5 rounded-xl p-5 hover:border-indigo-500/30 hover:bg-white/[0.02] transition-all duration-200 shadow-lg hover:shadow-xl hover:shadow-indigo-500/5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors mt-0.5">
+                              <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <h3 className="text-white font-semibold text-base group-hover:text-indigo-300 transition-colors truncate">{repo.name}</h3>
+                                {userRole && (
+                                  <span className="text-xs px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 capitalize whitespace-nowrap">
+                                    {userRole}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-slate-400 text-sm mb-3 line-clamp-1">{repo.description || 'No description provided'}</p>
+                              <div className="flex items-center gap-3 text-xs text-slate-500">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3.5 h-3.5" />
+                                  Updated {formatTime(repo.updatedAt)}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-slate-400 text-sm mt-1">{repo.description || 'No description'}</p>
-                          <div className="flex gap-3 text-xs text-slate-500 mt-2">
-                            <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              Updated {formatTime(repo.updatedAt)}
+                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                            <span className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize ${
+                              repo.visibility === 'public' 
+                                ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+                                : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                            }`}>
+                              {repo.visibility}
                             </span>
+                            <svg className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
                           </div>
                         </div>
-                        <span className={`text-xs px-3 py-1 rounded-full capitalize whitespace-nowrap flex-shrink-0 ${
-                          repo.visibility === 'public' 
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                            : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
-                        }`}>
-                          {repo.visibility}
-                        </span>
                       </div>
                     </SafeLink>
                   );
@@ -302,42 +335,83 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-[#11141d] border border-white/5 rounded-2xl shadow-2xl p-6 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Account Overview</h3>
-              <ul className="space-y-3 text-sm text-slate-300">
-                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                  <span>Total Repositories</span>
-                  <span className="text-indigo-400 font-semibold">{totalRepos}</span>
-                </li>
-                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                  <span>Private Repositories</span>
-                  <span className="text-indigo-400 font-semibold">{privateRepos}</span>
-                </li>
-                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                  <span>Public Repositories</span>
-                  <span className="text-indigo-400 font-semibold">{publicRepos}</span>
-                </li>
-                <li className="flex justify-between items-center py-1 border-b border-white/5">
-                  <span>Active Access Tokens</span>
+          <div className="space-y-4">
+            {/* Account Overview Card */}
+            <div className="bg-[#11141d] border border-white/5 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                Overview
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 transition-colors">
+                  <span className="text-slate-300 text-sm">Repositories</span>
+                  <span className="text-indigo-400 font-bold text-lg">{totalRepos}</span>
+                </div>
+                <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 transition-colors">
+                  <span className="text-slate-300 text-sm flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Private
+                  </span>
+                  <span className="text-slate-400 font-semibold">{privateRepos}</span>
+                </div>
+                <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 transition-colors">
+                  <span className="text-slate-300 text-sm flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Public
+                  </span>
+                  <span className="text-green-400 font-semibold">{publicRepos}</span>
+                </div>
+                <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 transition-colors">
+                  <span className="text-slate-300 text-sm">Access Tokens</span>
                   <span className="text-indigo-400 font-semibold">{activeTokens}</span>
-                </li>
-                <li className="flex justify-between items-center py-1">
-                  <span>Total Collaborators</span>
+                </div>
+                <div className="flex justify-between items-center py-2.5 px-3 rounded-lg bg-white/[0.02] border border-white/5 hover:border-indigo-500/20 transition-colors">
+                  <span className="text-slate-300 text-sm">Collaborators</span>
                   <span className="text-indigo-400 font-semibold">{totalCollaborators}</span>
-                </li>
-              </ul>
+                </div>
+              </div>
             </div>
-            <div className="border-t border-white/5 pt-4">
-              <h3 className="text-lg font-semibold text-white mb-2">Security Health</h3>
-              <p className={`text-2xl font-bold ${scoreColor} mb-2`}>{securityHealth.score} / 100</p>
+
+            {/* Security Health Card */}
+            <div className="bg-gradient-to-br from-[#11141d] to-[#0f1119] border border-white/5 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                Security Health
+              </h3>
+              
+              <div className="flex items-end gap-3 mb-4">
+                <div className={`text-4xl font-bold ${scoreColor}`}>{securityHealth.score}</div>
+                <div className="text-slate-500 text-sm mb-1.5">/ 100</div>
+              </div>
+
+              <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden mb-4">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    securityHealth.score >= 80 ? 'bg-green-400' : 
+                    securityHealth.score >= 60 ? 'bg-yellow-400' : 
+                    'bg-red-400'
+                  }`}
+                  style={{ width: `${securityHealth.score}%` }}
+                />
+              </div>
               
               {securityHealth.achievements.length > 0 && (
-                <div className="mb-3">
-                  <p className="text-xs text-slate-500 mb-1">Strengths:</p>
-                  <ul className="text-sm text-slate-400 space-y-1">
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-green-400 mb-2 flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    Strengths
+                  </p>
+                  <ul className="space-y-2">
                     {securityHealth.achievements.slice(0, 2).map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
+                      <li key={idx} className="flex items-start gap-2 text-sm text-slate-400 bg-green-500/5 border border-green-500/10 rounded-lg p-2">
                         <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
@@ -347,11 +421,14 @@ export default function Dashboard() {
               )}
 
               {securityHealth.issues.length > 0 && (
-                <div>
-                  <p className="text-xs text-slate-500 mb-1">Areas to improve:</p>
-                  <ul className="text-sm text-slate-400 space-y-1">
+                <div className="mb-4">
+                  <p className="text-xs font-medium text-yellow-400 mb-2 flex items-center gap-1">
+                    <Circle className="w-3.5 h-3.5" />
+                    Areas to Improve
+                  </p>
+                  <ul className="space-y-2">
                     {securityHealth.issues.slice(0, 2).map((item, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
+                      <li key={idx} className="flex items-start gap-2 text-sm text-slate-400 bg-yellow-500/5 border border-yellow-500/10 rounded-lg p-2">
                         <Circle className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
@@ -360,8 +437,11 @@ export default function Dashboard() {
                 </div>
               )}
 
-              <button className="mt-4 text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
-                View Security Report
+              <button className="w-full mt-2 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-slate-300 hover:text-white transition-all flex items-center justify-center gap-2 group">
+                <span>View Full Report</span>
+                <svg className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
@@ -376,16 +456,24 @@ export default function Dashboard() {
 function QuickActionCard({ icon, label, description, link, onClick }) {
   const cardContent = (
     <>
-      <div className="text-indigo-400 mb-3 group-hover:text-indigo-300 transition-colors">{icon}</div>
-      <h3 className="text-white text-sm font-semibold mb-1">{label}</h3>
-      <p className="text-slate-400 text-xs">{description}</p>
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 mb-4 group-hover:bg-indigo-500/20 group-hover:scale-110 transition-all duration-200">
+        <div className="text-indigo-400 group-hover:text-indigo-300 transition-colors">{icon}</div>
+      </div>
+      <h3 className="text-white font-semibold mb-1.5">{label}</h3>
+      <p className="text-slate-400 text-sm">{description}</p>
+      <div className="mt-4 flex items-center gap-1 text-indigo-400 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+        <span>Get started</span>
+        <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
     </>
   );
 
   if (onClick) {
     return (
       <div 
-        className="bg-[#11141d] border border-white/5 rounded-xl p-6 hover:border-indigo-400/50 hover:bg-indigo-400/5 transition-all duration-200 cursor-pointer group shadow-lg"
+        className="bg-[#11141d] border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 hover:bg-white/[0.02] transition-all duration-200 cursor-pointer group shadow-lg hover:shadow-xl hover:shadow-indigo-500/5 active:scale-[0.98]"
         onClick={onClick}
       >
         {cardContent}
@@ -394,7 +482,7 @@ function QuickActionCard({ icon, label, description, link, onClick }) {
   }
 
   const card = (
-    <div className="bg-[#11141d] border border-white/5 rounded-xl p-6 hover:border-indigo-400/50 hover:bg-indigo-400/5 transition-all duration-200 cursor-pointer group shadow-lg">
+    <div className="bg-[#11141d] border border-white/5 rounded-xl p-6 hover:border-indigo-500/30 hover:bg-white/[0.02] transition-all duration-200 cursor-pointer group shadow-lg hover:shadow-xl hover:shadow-indigo-500/5 active:scale-[0.98]">
       {cardContent}
     </div>
   );

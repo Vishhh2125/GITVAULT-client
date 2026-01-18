@@ -5,7 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 
 const ai = new GoogleGenAI({
-  apiKey: `AIzaSyDYhF3lPpovzPhogzkg-Z2YvhachlmlnnY`
+  apiKey: `AIzaSyAuxFNYikak81VcvCTMl9rbKxCu2bQKJok`
 });
 
 const SYSTEM_CONTEXT = `You are GitVault AI Assistant, a practical helper for developers.
