@@ -20,7 +20,6 @@ function SafeLink({ to, children, className }) {
 export default function Dashboard() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [activeDoc, setActiveDoc] = useState(null);
 
   // Redux state
   const repos = useSelector((state) => state.repos.repos);
@@ -30,14 +29,6 @@ export default function Dashboard() {
   const patTokens = useSelector((state) => state.pat.tokens);
   const patStatus = useSelector((state) => state.pat.status);
   const patError = useSelector((state) => state.pat.error);
-
-  const docs = {
-    init: ['Create repo from dashboard','Clone repo using git clone','Make first commit','Push to remote'],
-    token: ['Open settings','Generate new PAT','Copy token','Use token in CLI'],
-    branch: ['Create branch','Switch branch','Commit changes','Merge branch'],
-    cli: ['Install CLI','Login using token','Run gitvault status','Push changes'],
-    collab: ['Open repo','Invite user','Assign role','Save changes']
-  };
 
   useEffect(() => {
     if (repoStatus === 'idle') {
@@ -256,7 +247,7 @@ export default function Dashboard() {
             onClick={() => navigate('/repositories')}
           />
           <QuickActionCard icon={<Key />} label="Generate Token" description="Create API access token" link="/pat-tokens" />
-          <QuickActionCard icon={<BookOpen />} label="Documentation" description="View guides and help" />
+          <QuickActionCard icon={<BookOpen />} label="Documentation" description="View guides and help" link="/documentation" />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -372,32 +363,6 @@ export default function Dashboard() {
               <button className="mt-4 text-sm text-indigo-400 hover:text-indigo-300 transition-colors">
                 View Security Report
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Documentation Section */}
-        <div className="mt-10 bg-[#11141d] border border-white/5 rounded-2xl shadow-2xl p-6">
-          <div className="pb-4 border-b border-white/5 mb-4">
-            <h2 className="text-xl font-semibold text-white">GitVault Documentation</h2>
-            <p className="text-slate-500 text-xs mt-1">Learn how to use GitVault effectively</p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <ul className="space-y-3 text-sm text-slate-300">
-                <li className="cursor-pointer hover:text-indigo-400 transition-colors py-1 px-2 rounded-lg hover:bg-white/5" onClick={()=>setActiveDoc('init')}>• How to initialize a repository</li>
-                <li className="cursor-pointer hover:text-indigo-400 transition-colors py-1 px-2 rounded-lg hover:bg-white/5" onClick={()=>setActiveDoc('token')}>• How to generate & use Personal Access Tokens</li>
-                <li className="cursor-pointer hover:text-indigo-400 transition-colors py-1 px-2 rounded-lg hover:bg-white/5" onClick={()=>setActiveDoc('branch')}>• How to clone, push, and manage branches</li>
-                <li className="cursor-pointer hover:text-indigo-400 transition-colors py-1 px-2 rounded-lg hover:bg-white/5" onClick={()=>setActiveDoc('cli')}>• Using GitVault CLI</li>
-                <li className="cursor-pointer hover:text-indigo-400 transition-colors py-1 px-2 rounded-lg hover:bg-white/5" onClick={()=>setActiveDoc('collab')}>• Managing collaborators & permissions</li>
-              </ul>
-            </div>
-            <div className="bg-[#0b0d14] border border-white/10 rounded-xl p-4">
-              {activeDoc ? (
-                <ol className="list-decimal ml-5 space-y-2 text-sm text-slate-300">
-                  {docs[activeDoc].map((step,i)=>(<li key={i} className="py-1">{step}</li>))}
-                </ol>
-              ) : <p className="text-slate-500 text-sm">Select a topic to view steps</p>}
             </div>
           </div>
         </div>
