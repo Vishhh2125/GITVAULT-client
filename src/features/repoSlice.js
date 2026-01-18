@@ -85,6 +85,25 @@ const deleteRepo = createAsyncThunk(
 );
 
 
+
+const getAllPublicRepos=createAsyncThunk(
+    "repos/getAllPublicRepos",
+    async(_,{rejectWithValue})=>{
+        try {
+
+            const reponse = await api.get("/repos/public");
+            return reponse.data.data;
+            
+        } catch (error) {
+            rejectWithValue(
+                error.response?.data?.message || error.message || "Something went wrong"
+            )
+            
+        }
+    }
+)
+
+
    
 
 
@@ -108,7 +127,11 @@ const repoSlice= createSlice({
         updateError: null,
         //deleting state
         deleting: false,
-        deleteError: null
+        deleteError: null,
+
+        publicRepos:[],
+        publicReposStatus:"idle",
+        publicReposError:null,
     },
     reducers:{
         resetRepos:(state)=>{
@@ -130,6 +153,11 @@ const repoSlice= createSlice({
             state.currentRepo=null;
             state.repoInfoStatus="idle";
             state.repoInfoError=null;
+        },
+        resetPublicRepos:(state)=>{
+            state.publicRepos=[];
+            state.publicReposStatus="idle";
+            state.publicReposError=null;
         }
     }
     ,
@@ -213,11 +241,29 @@ const repoSlice= createSlice({
                 state.deleting=false;
                 state.deleteError=action.payload;
             })
+            // Get All Public Repos
+            .addCase(getAllPublicRepos.pending,(state,action)=>{
+
+                state.publicReposStatus="loading";
+                state.publicReposError=null;
+
+
+            })
+            .addCase(getAllPublicRepos.fulfilled,(state,action)=>{
+                state.publicReposStatus="succeeded";
+                state.publicRepos=action.payload;
+                state.publicReposError=null;
+            })
+            .addCase(getAllPublicRepos.rejected,(state,action)=>{
+                state.publicReposStatus="failed";
+                state.publicReposError=action.payload;
+            })
+            
     }
 })
 
 
 
-export { getRepos, createRepo, getRepoInfo, updateRepo, deleteRepo };
+export { getRepos, createRepo, getRepoInfo, updateRepo, deleteRepo ,getAllPublicRepos };
 export default repoSlice.reducer;
-export const {resetRepos,resetRepoInfo}=repoSlice.actions;
+export const {resetRepos,resetRepoInfo,resetPublicRepos}=repoSlice.actions;

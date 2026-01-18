@@ -5,12 +5,22 @@ import { getRepos, resetRepos, createRepo } from '../../features/repoSlice.js';
 import LoadingState from '../Layout/Loading.jsx';
 import ErrorState from '../Layout/Error.jsx';
 import toast from 'react-hot-toast';
+import { Clock } from 'lucide-react';
 
 
 const formatTime = (dateString) => {
+  if (!dateString) return 'Unknown';
   const date = new Date(dateString);
-  const diffInDays = Math.ceil((date - new Date()) / (1000 * 60 * 60 * 24));
-  return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(diffInDays, 'day');
+  const now = new Date();
+  const diffInMs = now - date;
+  const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+  
+  if (diffInDays === 0) return 'Today';
+  if (diffInDays === 1) return 'Yesterday';
+  if (diffInDays < 7) return `${diffInDays} days ago`;
+  if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
+  if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
+  return `${Math.floor(diffInDays / 365)} years ago`;
 };
 
 export default function RepositoryPage() {
@@ -32,17 +42,13 @@ export default function RepositoryPage() {
   const creatingError = useSelector((state) => state.repos.creatingError);
   const fileStatus = useSelector((state) => state.fileTree.status);
   const collaboratorStatus = useSelector((state) => state.collaborators.status);
+  const user = useSelector((state) => state.user.user);
 
   useEffect(() => {
-
-   if(repoStatus==="idle"){
-     dispatch(getRepos());
-   }
-
-    return ()=>{
-      dispatch(resetRepos());
+    if(repoStatus === "idle"){
+      dispatch(getRepos());
     }
-  }, [dispatch]);
+  }, [dispatch, repoStatus]);
 
   useEffect(()=>{
     if(creatingError){
@@ -70,6 +76,17 @@ export default function RepositoryPage() {
     repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (repo.description && repo.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Determine user role in repo
+  const getUserRole = (repo) => {
+    if (!user || !repo) return null;
+    if (repo.owner?._id === user._id || repo.owner === user._id) return 'Owner';
+    const collab = repo.collaborators?.find(c => {
+      const collabUserId = typeof c.user === 'object' ? c.user._id : c.user;
+      return collabUserId === user._id;
+    });
+    return collab ? collab.role : null;
+  };
 
 
   if(repoStatus==="loading")return(<LoadingState/>)
@@ -251,51 +268,52 @@ export default function RepositoryPage() {
         </div>
       </div>
 
-      {/* SLIM REPOSITORY LIST: Reduced padding and gap */}
-      <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+      {/* REPOSITORY LIST */}
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
         {filteredRepos.length > 0 ? (
-          filteredRepos.map((repo) => (
-            <div
-              key={repo.id}
-              onClick={() => navigate(`/repositories/${repo._id}`)}
-              className="group relative bg-[#1a1d2e] border border-white/5 rounded-xl p-4 hover:border-indigo-500/30 transition-all duration-200 cursor-pointer hover:bg-[#1e2235]"
-            >
-              {/* Thinner accent bar */}
-              <div className="absolute left-0 top-3 bottom-3 w-0.5 bg-indigo-500 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity" />
-
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-lg font-bold text-white group-hover:text-indigo-400 transition-colors truncate">
-                      {repo.name}
-                    </h3>
-                    <span className="px-2 py-0.5 rounded text-[10px] uppercase tracking-tighter font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <div className="bg-[#11141d] border border-white/5 rounded-2xl shadow-2xl overflow-hidden divide-y divide-white/5">
+            {filteredRepos.map((repo) => {
+              const userRole = getUserRole(repo);
+              return (
+                <div
+                  key={repo._id}
+                  onClick={() => navigate(`/repositories/${repo._id}`)}
+                  className="block p-6 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-indigo-400 font-semibold hover:text-indigo-300 transition-colors">
+                          {repo.name}
+                        </h3>
+                        {userRole && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 capitalize whitespace-nowrap">
+                            {userRole}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-slate-400 text-sm mt-1">
+                        {repo.description || 'No description'}
+                      </p>
+                      <div className="flex gap-3 text-xs text-slate-500 mt-2">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Updated {formatTime(repo.updatedAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <span className={`text-xs px-3 py-1 rounded-full capitalize whitespace-nowrap flex-shrink-0 ${
+                      repo.visibility === 'public' 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'bg-slate-500/20 text-slate-400 border border-slate-500/30'
+                    }`}>
                       {repo.visibility}
                     </span>
                   </div>
-                  
-                  {/* Inline metadata to save vertical space */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <p className="truncate max-w-[300px] text-slate-400">
-                      {repo.description || "No description provided."}
-                    </p>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                      <span>TypeScript</span>
-                    </div>
-                    <span>Updated {formatTime(repo.updatedAt)}</span>
-                  </div>
                 </div>
-
-                {/* Smaller icon on the right */}
-                <div className="hidden sm:flex p-2 rounded-lg bg-white/5 group-hover:bg-indigo-500/10 transition-colors">
-                  <svg className="w-5 h-5 text-slate-500 group-hover:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          ))
+              );
+            })}
+          </div>
         ) : (
           <div className="text-center py-10 bg-white/5 rounded-2xl border border-dashed border-white/10">
             <div className="text-slate-500 text-sm italic">No repositories found</div>

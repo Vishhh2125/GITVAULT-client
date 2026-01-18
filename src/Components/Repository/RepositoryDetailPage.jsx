@@ -1,6 +1,6 @@
-import { useState ,useEffect} from 'react';
-import { useNavigate ,useParams } from 'react-router-dom';
-import { useDispatch,useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { getRepoInfo, updateRepo, deleteRepo, resetRepoInfo } from '../../features/repoSlice.js';
 import FilesTab from './FileTab.jsx';
 import CollaboratorsTab from './Collaborator.jsx';
@@ -8,6 +8,7 @@ import LoadingState from '../Layout/Loading.jsx';
 import ErrorState from '../Layout/Error.jsx';
 import toast from 'react-hot-toast';
 import SettingsTab from './repoSetting.jsx';
+import api from '../../api/api.js';
 
 function RepositoryDetailPage() {
   const { id:repoId} = useParams();
@@ -24,15 +25,17 @@ function RepositoryDetailPage() {
 
   useEffect(() => {
     // Fetch repo info
-    if (repoId && repoInfoStatus==="idle") {
+    if (repoId && repoInfoStatus === "idle") {
       dispatch(getRepoInfo(repoId));
     }
+  }, [dispatch, repoId, repoInfoStatus]);
 
+  useEffect(() => {
     return () => {
-      // repo boundary reset (LEAVE)
+      // Cleanup on unmount
       dispatch(resetRepoInfo());
     };
-  }, [dispatch, repoId]);
+  }, [dispatch]);
 
 
   // useEffect(() => {
@@ -80,6 +83,29 @@ function RepositoryDetailPage() {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  // Get git clone URL
+  const getCloneUrl = () => {
+    if (!currentRepo || !currentRepo.owner) return '';
+    // Get base URL from api config (remove /api/v1 for git URLs)
+    const baseUrl = api.defaults.baseURL.replace('/api/v1', '');
+    const username = currentRepo.owner.username;
+    const repoName = currentRepo.name;
+    return `${baseUrl}/git/${username}/${repoName}.git`;
+  };
+
+  const cloneUrl = getCloneUrl();
+
+  const handleCopyCloneUrl = async () => {
+    if (!cloneUrl) return;
+    try {
+      await navigator.clipboard.writeText(cloneUrl);
+      toast.success('Clone URL copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+      toast.error('Failed to copy URL');
+    }
   };
 
   return (
@@ -144,14 +170,29 @@ function RepositoryDetailPage() {
           </div>
             </div>
             
+            {/* Clone URL Section */}
+            <div className="mt-6">
+              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Clone Repository</label>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-[#0b0d14] border border-white/10 rounded-lg px-4 py-2.5 font-mono text-sm text-slate-300 overflow-x-auto">
+                  {cloneUrl}
+                </div>
+                <button
+                  onClick={handleCopyCloneUrl}
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 active:scale-95 flex items-center gap-2 whitespace-nowrap"
+                  title="Copy clone URL"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">Use this URL to clone the repository with Git</p>
+            </div>
+            
             {/* Action Buttons */}
-            <div className="flex gap-3">
-              <button className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-semibold transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 active:scale-95 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Clone
-              </button>
+            <div className="flex gap-3 mt-4">
               <button className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-indigo-500/30 text-white rounded-lg font-semibold transition-all active:scale-95 flex items-center gap-2">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />

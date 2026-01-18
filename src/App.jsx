@@ -4,6 +4,7 @@ import { Register } from './Components/Authentication/Register.jsx'
 import { Login } from './Components/Authentication/SignIn.jsx'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './Components/Layout/Layout.jsx'
+import Dashboard from './Components/Main/DashBoard.jsx'
 import RepositoryPage from './Components/Repository/RepositoryPage.jsx'
 import PatTokenPage from './Components/Token/patTokenPage.jsx'
 import Settings from './Components/Settings/settings.jsx'
@@ -19,7 +20,7 @@ function App() {
       
       {/* Protected Routes with Layout */}
       <Route element={<Layout />}>
-        <Route path="/dashboard" element={<div className="text-white">Dashboard Content</div>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/repositories" element={<ProtectedRoute><RepositoryPage /></ProtectedRoute>} />
         <Route path="/pat-tokens" element={<ProtectedRoute><PatTokenPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

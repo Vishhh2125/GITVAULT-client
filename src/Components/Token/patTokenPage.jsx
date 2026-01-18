@@ -6,10 +6,7 @@ import LoadingState from '../Layout/Loading.jsx';
 import ErrorState from '../Layout/Error.jsx';
 function PatTokenPage() {
 
-  const dispatch = useDispatch();
-
-  
-  
+  const dispatch = useDispatch(); 
   const {
     tokens: patTokens,
     status: patStatus,
@@ -25,20 +22,15 @@ function PatTokenPage() {
   const [newTokenLabel, setNewTokenLabel] = useState('');
   const [showTokenModal, setShowTokenModal] = useState(false);
 
-  // 1]]
+  // 1] Fetch tokens on mount
   useEffect(()=>{
     dispatch(clearErrors())
     if(patStatus==="idle"){
-      
       dispatch(getPatTokens());
     }
+  }, [dispatch, patStatus]);
 
-    return ()=>{
-      dispatch(resetPats());
-    }
-  }, [  dispatch]);
-
-  // 2]Show toast for action errors
+  // 2] Show toast for action errors
   useEffect(() => {
     if (actionError) {
       toast.error(actionError.message || 'Operation failed');
@@ -51,6 +43,15 @@ function PatTokenPage() {
       toast.error(createError || 'Failed to create token');
     }
   }, [createError]);
+
+  // 4] Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(resetPats());
+      dispatch(clearErrors());
+      dispatch(clearNewlyCreatedToken());
+    };
+  }, [dispatch]);
 
   const handleCreateToken = async () => {
     if (!newTokenLabel.trim()) {
@@ -146,7 +147,7 @@ function PatTokenPage() {
   // Page-level error state
   else if (patStatus === 'failed') return (<ErrorState 
                                               message={`${ patError}`}
-                                              onRetry={() => dispatch(resetPatStatus())} />)
+                                              onRetry={() => dispatch(getPatTokens())} />)
   else return (
     <div className="text-slate-200 h-full flex flex-col p-6 space-y-6">
       
