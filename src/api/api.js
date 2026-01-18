@@ -4,7 +4,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "http://3.108.63.227:5000/api/v1",
-  withCredentials: false   // ❗ Only refresh uses cookies
+  withCredentials: true   // ❗ Only refresh uses cookies
 });
 
 /* ----------------- Attach Access Token ----------------- */
