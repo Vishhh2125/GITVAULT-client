@@ -3,7 +3,7 @@ import axios from "axios";
 /* ----------------- Base Axios Instance ----------------- */
 
 const api = axios.create({
-  baseURL: import.meta.env.PROD ? "/api" : "http://3.108.63.227:5000/api/v1",
+  baseURL: "http://3.108.63.227:5000/api/v1",
   withCredentials: true   // ❗ Only refresh uses cookies
 });
 
